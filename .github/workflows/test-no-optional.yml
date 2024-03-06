@@ -1,0 +1,37 @@
+name: Test no optional
+
+on:
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Alpine
+        uses: jirutka/setup-alpine@v1
+
+      - name: Install nodejs
+        shell: alpine.sh --root {0}
+        run: |
+          apk add nodejs
+          apk add git
+
+      - name: Install pnpm
+        shell: alpine.sh {0}
+        run: |
+          wget -qO- https://get.pnpm.io/install.sh | ENV="$HOME/.shrc" SHELL="$(which sh)" sh -
+          PNPM_HOME="$HOME/.local/share/pnpm"
+          echo "PNPM_HOME=$PNPM_HOME" >> $GITHUB_ENV
+          echo "$PNPM_HOME" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        shell: alpine.sh {0}
+        run: pnpm install --no-optional=false
+
+      - name: Test
+        shell: alpine.sh {0}
+        run: ls -al ./node_modules/.pnpm | grep "@img"
